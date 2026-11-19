@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoreIP-Nexus — Portal mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E13; --bg-2:#0D131A;
+    --surface:#121A24; --surface-2:#1A2430; --surface-3:#212D3A;
+    --border:#232E3C; --border-strong:#34424F;
+    --text:#E7EDF3; --text-2:#93A3B5; --text-3:#5E6E80;
+    --accent:#38BDF8; --accent-dim:rgba(56,189,248,.14); --accent-text:#7DD3FC; --accent-border:rgba(56,189,248,.35);
+    --success:#34D399; --success-dim:rgba(52,211,153,.14); --success-border:rgba(52,211,153,.35);
+    --warning:#FBBF24; --warning-dim:rgba(251,191,36,.14); --warning-border:rgba(251,191,36,.35);
+    --danger:#F87171; --danger-dim:rgba(248,113,113,.14); --danger-border:rgba(248,113,113,.35);
+    --radius:8px; --radius-lg:12px;
+    --font-display:'IBM Plex Sans',Inter,-apple-system,sans-serif;
+    --font-body:'Inter',-apple-system,sans-serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;display:flex;min-height:100vh;}
+  a{color:var(--accent-text);}
+  button,select,input{font-family:var(--font-body);}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  img,svg{max-width:100%;}
+
+  /* Sidebar */
+  .sidebar{width:232px;flex-shrink:0;background:var(--bg-2);border-right:1px solid var(--border);
+    position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:20px 14px;}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 6px 20px;}
+  .brand .mark{width:30px;height:30px;border-radius:8px;background:var(--accent-dim);border:1px solid var(--accent-border);
+    color:var(--accent-text);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);
+    font-weight:600;font-size:12px;flex-shrink:0;}
+  .brand .name{font-family:var(--font-display);font-size:14.5px;font-weight:500;line-height:1.2;}
+  .brand .tag{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+  nav.primary-nav{display:flex;flex-direction:column;gap:2px;flex:1;}
+  .nav-btn{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius);
+    color:var(--text-2);font-size:13.5px;background:transparent;border:1px solid transparent;cursor:pointer;
+    text-align:left;width:100%;}
+  .nav-btn:hover{background:var(--surface-2);color:var(--text);}
+  .nav-btn.active{background:var(--accent-dim);color:var(--accent-text);border-color:var(--accent-border);font-weight:500;}
+  .nav-btn svg{flex-shrink:0;}
+  .sidebar-footer{border-top:1px solid var(--border);padding-top:14px;margin-top:14px;display:flex;align-items:center;gap:10px;}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;
+    justify-content:center;font-size:11.5px;font-weight:500;color:var(--text-2);flex-shrink:0;}
+  .sidebar-footer .who{line-height:1.3;}
+  .sidebar-footer .who .n{font-size:12.5px;}
+  .sidebar-footer .who .r{font-size:11px;color:var(--text-3);}
+
+  /* Mobile top bar + drawer overlay (hidden on desktop) */
+  .mobile-topbar{display:none;align-items:center;gap:12px;position:sticky;top:0;z-index:40;
+    background:var(--bg-2);border-bottom:1px solid var(--border);padding:12px 16px;}
+  .hamburger{background:transparent;border:1px solid var(--border-strong);border-radius:var(--radius);
+    width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text);cursor:pointer;}
+  .hamburger:hover{background:var(--surface-2);}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(3,6,10,.55);z-index:45;}
+  .sidebar-overlay.open{display:block;}
+
+  /* Main */
+  main{flex:1;min-width:0;padding:30px 40px 60px;max-width:1240px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .screen-header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px;}
+  .screen-header h1{font-family:var(--font-display);font-size:21px;font-weight:500;margin:0 0 4px;}
+  .screen-header .meta{font-size:12.5px;color:var(--text-2);margin:0;}
+  .header-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .status-text{font-size:12.5px;color:var(--text-3);}
+
+  .btn{font-size:13px;padding:8px 14px;border-radius:var(--radius);border:1px solid var(--border-strong);
+    background:var(--surface-2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .btn:hover{background:var(--surface-3);}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .btn-primary{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent-text);}
+  .btn-primary:hover{background:rgba(56,189,248,.22);}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;margin-bottom:16px;}
+  .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+  .card-title{font-family:var(--font-display);font-size:14.5px;font-weight:500;display:flex;align-items:center;gap:8px;}
+  .card-title svg{color:var(--text-2);flex-shrink:0;}
+  .card-sub{font-size:12px;color:var(--text-3);}
+
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px;}
+  .metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;}
+  .metric .label{font-size:12.5px;color:var(--text-2);margin-bottom:8px;}
+  .metric .value{font-family:var(--font-display);font-size:25px;font-weight:500;}
+  .metric .sub{font-size:11.5px;color:var(--text-3);margin-top:5px;}
+
+  .two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
+
+  .region-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+  .region-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;}
+  .region-card .rname{font-family:var(--font-display);font-size:13.5px;font-weight:500;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px;}
+  .region-card .rstat{font-size:12px;color:var(--text-2);display:flex;justify-content:space-between;padding:3px 0;}
+
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -2px;}
+  table.table{width:100%;border-collapse:collapse;font-size:13px;}
+  .table th{text-align:left;font-weight:500;color:var(--text-3);font-size:11px;text-transform:uppercase;
+    letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  .table td{padding:10px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+  .table tr:last-child td{border-bottom:none;}
+  .mono{font-family:var(--font-mono);font-size:12.5px;}
+  .list-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);gap:10px;}
+  .list-row:last-child{border-bottom:none;}
+  .list-row .primary{font-size:13px;}
+  .list-row .secondary{font-size:11.5px;color:var(--text-3);margin-top:2px;}
+
+  .badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+  .badge-neutral{background:var(--surface-3);color:var(--text-2);}
+  .badge-info{background:var(--accent-dim);color:var(--accent-text);}
+  .badge-success{background:var(--success-dim);color:var(--success);}
+  .badge-warning{background:var(--warning-dim);color:var(--warning);}
+  .badge-danger{background:var(--danger-dim);color:var(--danger);}
+
+  .terminal{background:#080B0F;border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;
+    font-family:var(--font-mono);font-size:12.5px;line-height:1.85;overflow-x:auto;white-space:nowrap;}
+  .terminal .prompt{color:var(--text-3);}
+  .terminal .tag-a{color:var(--text-2);}
+  .terminal .tag-c{color:var(--accent-text);}
+  .terminal .tag-g{color:var(--text-3);}
+
+  .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+
+  .filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .filter-group{display:flex;gap:6px;flex-wrap:wrap;}
+  .filter-pill{padding:6px 13px;border-radius:20px;border:1px solid var(--border-strong);font-size:12px;
+    color:var(--text-2);background:var(--surface-2);cursor:pointer;}
+  .filter-pill:hover{background:var(--surface-3);}
+  .filter-pill.active{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent-text);}
+  .search-input{background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);
+    border-radius:var(--radius);padding:8px 12px;font-size:13px;min-width:200px;width:100%;max-width:280px;}
+
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+  .field label{font-size:12.5px;color:var(--text-2);}
+  .field label .hint{color:var(--text-3);font-weight:400;font-size:11px;}
+  select,input[type=text],input[type=number]{background:var(--surface-2);border:1px solid var(--border-strong);
+    color:var(--text);border-radius:var(--radius);padding:9px 11px;font-size:13.5px;width:100%;}
+  select:disabled,input:disabled{opacity:.42;cursor:not-allowed;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .conditional-group{border-left:2px solid var(--border-strong);padding-left:16px;margin:2px 0 18px;}
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px;}
+  .pill{padding:5px 12px;border-radius:20px;border:1px solid var(--border-strong);font-family:var(--font-mono);
+    font-size:12px;cursor:pointer;background:var(--surface-2);color:var(--text-2);}
+  .pill.selected{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent-text);}
+  .banner{background:var(--success-dim);border:1px solid var(--success-border);color:var(--success);
+    padding:10px 14px;border-radius:var(--radius);font-size:13px;margin-bottom:16px;}
+
+  .stepper-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .stepper{display:flex;align-items:flex-start;margin:6px 0 2px;min-width:360px;}
+  .step{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .step .dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:11px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text-3);flex-shrink:0;}
+  .step.done .dot{background:var(--success-dim);border-color:var(--success-border);color:var(--success);}
+  .step.current .dot{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent-text);}
+  .step .label{font-size:11px;color:var(--text-3);text-align:center;width:84px;}
+  .step .who{font-size:10.5px;color:var(--text-3);text-align:center;width:84px;}
+  .step.done .label{color:var(--text-2);}
+  .step-line{flex:1;height:1px;background:var(--border-strong);margin-top:13px;min-width:20px;}
+  .step-line.done{background:var(--success-border);}
+
+  .status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;}
+  .status-dot.active{background:var(--success);}
+  .status-dot.maint{background:var(--warning);}
+
+  /* ===== Responsive breakpoints ===== */
+  @media (max-width: 1000px){
+    .two-col{grid-template-columns:1fr;}
+  }
+  @media (max-width: 900px){
+    body{flex-direction:column;}
+    .mobile-topbar{display:flex;}
+    .sidebar{position:fixed;top:0;left:0;z-index:50;width:80vw;max-width:280px;
+      transform:translateX(-100%);transition:transform .22s ease;box-shadow:none;}
+    .sidebar.open{transform:translateX(0);box-shadow:24px 0 48px rgba(0,0,0,.4);}
+    main{padding:22px 18px 50px;}
+    .region-strip{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width: 700px){
+    .region-strip{grid-template-columns:1fr;}
+    .metrics{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+  }
+  @media (max-width: 560px){
+    main{padding:18px 14px 50px;}
+    .screen-header h1{font-size:19px;}
+    .card{padding:15px 16px;}
+    .metric{padding:14px 15px;}
+    .metric .value{font-size:22px;}
+    .field-row{grid-template-columns:1fr;gap:0;}
+    .search-input{max-width:none;}
+    .btn-primary,.header-actions .btn{flex:1;justify-content:center;}
+  }
+  @media (max-width: 420px){
+    .metrics{grid-template-columns:1fr;}
+    .step .label,.step .who{width:64px;font-size:10px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="mobile-topbar">
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open navigation menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <div class="brand" style="padding:0;">
+    <div class="mark">CN</div>
+    <div><div class="name">CoreIP · Nexus</div></div>
+  </div>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="mark">CN</div>
+    <div>
+      <div class="name">CoreIP · Nexus</div>
+      <div class="tag">Network ops portal</div>
+    </div>
+  </div>
+  <nav class="primary-nav">
+    <button class="nav-btn active" data-target="screen-dashboard">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-btn" data-target="screen-audit">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.3"/><circle cx="12" cy="12" r="0.9" fill="currentColor" stroke="none"/><path d="M12 3v2.6M21 12h-2.6M12 21v-2.6M3 12h2.6"/></svg>
+      IP audit engine
+    </button>
+    <button class="nav-btn" data-target="screen-provisioning">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="1.5"/><path d="M9 3.4h6v2.3H9z"/><path d="M8.5 13l2.2 2.2L15.5 11"/></svg>
+      Provisioning
+    </button>
+    <button class="nav-btn" data-target="screen-backups">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5V12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V5.5"/><path d="M5 12v6.5C5 19.9 8.1 21 12 21s7-1.1 7-2.5V12"/></svg>
+      Backups
+    </button>
+    <button class="nav-btn" data-target="screen-inventory">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="4" height="4" rx="1"/><path d="M10.5 6.5h10"/><rect x="3.5" y="10.5" width="4" height="4" rx="1"/><path d="M10.5 12.5h10"/><rect x="3.5" y="16.5" width="4" height="4" rx="1"/><path d="M10.5 18.5h10"/></svg>
+      Inventory
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="avatar">TA</div>
+    <div class="who">
+      <div class="n">T. Adeyemi</div>
+      <div class="r">Core IP Engineer</div>
+    </div>
+  </div>
+</aside>
+
+<main>
+
+  <!-- ================= DASHBOARD ================= -->
+  <section class="screen active" id="screen-dashboard">
+    <div class="screen-header">
+      <div>
+        <h1>Overview</h1>
+        <p class="meta">Last sync 2 minutes ago</p>
+      </div>
+      <div class="filter-group">
+        <button class="filter-pill active" data-region-filter="All">All regions</button>
+        <button class="filter-pill" data-region-filter="Lagos">Lagos</button>
+        <button class="filter-pill" data-region-filter="Abuja">Abuja</button>
+        <button class="filter-pill" data-region-filter="Kano">Kano</button>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="label">Devices online</div><div class="value">142 / 150</div><div class="sub">6 core routers, 8 core switches under maintenance windows excluded</div></div>
+      <div class="metric"><div class="label">Pending approvals</div><div class="value">5</div><div class="sub">3 awaiting vetting, 2 awaiting manager approval</div></div>
+      <div class="metric"><div class="label">IPAM diffs to review</div><div class="value">8</div><div class="sub">From this morning's audit run</div></div>
+      <div class="metric"><div class="label">Last backup success</div><div class="value">96%</div><div class="sub">48 / 50 devices · Saturday 00:15</div></div>
+    </div>
+
+    <div class="region-strip">
+      <div class="region-card"><div class="rname">Lagos <span style="color:var(--text-3);font-weight:400;">86 devices</span></div>
+        <div class="rstat"><span>Active</span><span>83</span></div>
+        <div class="rstat"><span>Flagged</span><span style="color:var(--warning);">3</span></div></div>
+      <div class="region-card"><div class="rname">Abuja <span style="color:var(--text-3);font-weight:400;">41 devices</span></div>
+        <div class="rstat"><span>Active</span><span>39</span></div>
+        <div class="rstat"><span>Flagged</span><span style="color:var(--warning);">2</span></div></div>
+      <div class="region-card"><div class="rname">Kano <span style="color:var(--text-3);font-weight:400;">15 devices</span></div>
+        <div class="rstat"><span>Active</span><span>15</span></div>
+        <div class="rstat"><span>Flagged</span><span>0</span></div></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Recent audit activity</div></div>
+        <div class="list-row"><div><div class="primary mono">105.112.34.9</div><div class="secondary">CPE unreachable, ICMP timeout</div></div><span class="badge badge-neutral">Timeout</span></div>
+        <div class="list-row"><div><div class="primary mono">105.112.34.5</div><div class="secondary">All credential profiles failed</div></div><span class="badge badge-warning">Needs review</span></div>
+        <div class="list-row"><div><div class="primary mono">105.112.50.2</div><div class="secondary">Description changed vs phpIPAM</div></div><span class="badge badge-info">IPAM diff</span></div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Provisioning queue</div><span class="badge badge-warning">3 pending</span></div>
+          <div class="list-row"><div><div class="primary">NG-LAG-0417</div><div class="secondary">Netfinity · Ikorodu POP</div></div><span class="badge badge-warning">Vetting</span></div>
+          <div class="list-row"><div><div class="primary">NG-ABJ-0092</div><div class="secondary">MainOne · VLAN 214</div></div><span class="badge badge-info">Approval</span></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Backup status</div></div>
+          <div class="list-row"><div><div class="primary">48 / 50 succeeded</div><div class="secondary">2 devices exhausted retries</div></div><span class="badge badge-danger">2 failed</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= IP AUDIT ================= -->
+  <section class="screen" id="screen-audit">
+    <div class="screen-header">
+      <div>
+        <h1>IP audit engine</h1>
+        <p class="meta" id="auditMeta">Last run: today, 06:00 · core-asr01, core-asr02</p>
+      </div>
+      <div class="header-actions">
+        <span class="status-text" id="auditStatus"></span>
+        <button class="btn btn-primary" id="runAuditBtn">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8V4z"/></svg>
+          Run audit now
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.3"/></svg>
+          core-asr01 · show route ipv4 unicast longer-prefixes
+        </div>
+        <span class="card-sub">105.112.32.0/19</span>
+      </div>
+      <div class="terminal">
+<div><span class="prompt">core-asr01#</span> show route ipv4 unicast longer-prefixes 105.112.32.0/19</div>
+<div>&nbsp;</div>
+<div>105.112.32.0/24&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag-a">[afrinic_assigned]</span></div>
+<div>105.112.33.0/25&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag-c">[customer_lease]</span> → next-usable 105.112.33.1</div>
+<div>105.112.33.128/26&nbsp;&nbsp;<span class="tag-c">[customer_lease]</span> → next-usable 105.112.33.129</div>
+<div>105.112.34.0/28&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag-c">[customer_lease]</span> → next-usable 105.112.34.1</div>
+<div>105.112.36.0/23&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag-g">[aggregated_route]</span></div>
+<div>105.112.38.0/24&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag-a">[afrinic_assigned]</span></div>
+      </div>
+      <div class="chip-row" style="margin-top:14px;">
+        <span class="badge badge-neutral">AFRINIC assigned · 12</span>
+        <span class="badge badge-info">Customer lease · 84</span>
+        <span class="badge badge-neutral">Aggregated route · 6</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Flagged results</div><span class="card-sub">Customer-lease prefixes requiring attention</span></div>
+      <div class="table-scroll">
+      <table class="table">
+        <thead><tr><th>Prefix / next-usable IP</th><th>Ping</th><th>CPE identity</th><th>Status</th><th>IPAM sync</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">105.112.33.129</td><td><span class="badge badge-neutral">Success</span></td><td class="mono">CPE-LAG-0231</td><td><span class="badge badge-success">Matched</span></td><td><span class="badge badge-neutral">Unchecked</span></td></tr>
+          <tr><td class="mono">105.112.34.1</td><td><span class="badge badge-danger">Timeout</span></td><td class="mono">—</td><td><span class="badge badge-neutral">Not applicable</span></td><td><span class="badge badge-neutral">Unchecked</span></td></tr>
+          <tr><td class="mono">105.112.34.5</td><td><span class="badge badge-neutral">Success</span></td><td class="mono">—</td><td><span class="badge badge-warning">Further intervention required</span></td><td><span class="badge badge-neutral">Unchecked</span></td></tr>
+          <tr><td class="mono">105.112.50.2</td><td><span class="badge badge-neutral">Success</span></td><td class="mono">CPE-ABJ-0110</td><td><span class="badge badge-success">Matched</span></td><td><span class="badge badge-info">Diff found</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">IPAM sync review</div><span class="card-sub">Held for admin review · 8 items</span></div>
+      <div class="table-scroll">
+      <table class="table">
+        <thead><tr><th>Prefix</th><th>Diff type</th><th>Detail</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="mono">105.112.50.2</td><td><span class="badge badge-info">Changed</span></td><td>Description: "Site A" → "Site A - relocated"</td><td class="diff-status"><span class="badge badge-neutral">Pending</span></td>
+            <td><button class="btn diff-action" data-action="accept" style="padding:4px 10px;">Accept</button> <button class="btn diff-action" data-action="reject" style="padding:4px 10px;">Reject</button></td></tr>
+          <tr><td class="mono">105.112.61.0/26</td><td><span class="badge badge-warning">New in audit</span></td><td>Prefix seen on router, not present in phpIPAM</td><td class="diff-status"><span class="badge badge-neutral">Pending</span></td>
+            <td><button class="btn diff-action" data-action="accept" style="padding:4px 10px;">Accept</button> <button class="btn diff-action" data-action="reject" style="padding:4px 10px;">Reject</button></td></tr>
+          <tr><td class="mono">105.112.29.0/25</td><td><span class="badge badge-danger">Missing in phpIPAM</span></td><td>Recorded in phpIPAM, no longer announced</td><td class="diff-status"><span class="badge badge-neutral">Pending</span></td>
+            <td><button class="btn diff-action" data-action="accept" style="padding:4px 10px;">Accept</button> <button class="btn diff-action" data-action="reject" style="padding:4px 10px;">Reject</button></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PROVISIONING ================= -->
+  <section class="screen" id="screen-provisioning">
+    <div class="screen-header">
+      <div>
+        <h1>Auto-provisioning</h1>
+        <p class="meta">New request · fields change based on carrier partner</p>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Intake form</div></div>
+        <div id="provBanner" class="banner" hidden>Submitted for vetting · Core IP Engineer will be notified</div>
+        <form id="provForm">
+          <div class="field">
+            <label>Customer site ID</label>
+            <input type="text" id="siteId" placeholder="NG-LAG-0417">
+          </div>
+          <div class="field">
+            <label>Carrier partner</label>
+            <select id="partnerSelect"></select>
+          </div>
+          <div class="field">
+            <label>Region</label>
+            <select id="regionSelect" disabled><option value="">Select a carrier partner first</option></select>
+          </div>
+
+          <div id="internalFields" class="conditional-group" hidden>
+            <div class="field"><label>Base station / POP</label><select id="popSelect" disabled><option value="">Select region first</option></select></div>
+            <div class="field"><label>Switch <span class="hint">most free ports suggested</span></label><select id="switchSelectInt" disabled><option value="">Select POP first</option></select></div>
+            <div class="field"><label>Switch port</label><select id="portSelectInt" disabled><option value="">Select switch first</option></select></div>
+          </div>
+
+          <div id="externalFields" class="conditional-group" hidden>
+            <div class="field"><label>Switch <span class="hint">NNI x-connect with partner</span></label><select id="switchSelectExt" disabled><option value="">Select region first</option></select></div>
+            <div class="field"><label>NNI trunk port</label><select id="portSelectExt" disabled><option value="">Select switch first</option></select></div>
+            <div class="field">
+              <label>VLAN <span class="hint">suggested from partner trend on this trunk</span></label>
+              <div class="pill-row" id="vlanSuggestions"></div>
+              <input type="number" id="vlanInput" placeholder="e.g. 214">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field"><label>Management IP</label><input type="text" id="mgmtIp" placeholder="10.20.4.2"></div>
+            <div class="field"><label>Public IP</label><input type="text" id="publicIp" placeholder="105.112.34.10"></div>
+          </div>
+
+          <button type="button" class="btn btn-primary" id="submitProv" style="width:100%;justify-content:center;">Generate config &amp; submit for vetting</button>
+        </form>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Recent submissions</div></div>
+          <div class="table-scroll">
+          <table class="table">
+            <thead><tr><th>Site</th><th>Partner</th><th>Region</th><th>Status</th></tr></thead>
+            <tbody id="submissionsBody">
+              <tr><td class="mono">NG-LAG-0417</td><td>Netfinity</td><td>Lagos</td><td><span class="badge badge-warning">Pending vetting</span></td></tr>
+              <tr><td class="mono">NG-ABJ-0092</td><td>MainOne</td><td>Abuja</td><td><span class="badge badge-info">Pending approval</span></td></tr>
+              <tr><td class="mono">NG-KAN-0033</td><td>Glo</td><td>Kano</td><td><span class="badge badge-success">Provisioned</span></td></tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Approval trail — NG-ABJ-0092</div></div>
+          <div class="stepper-wrap">
+          <div class="stepper">
+            <div class="step done"><div class="dot">✓</div><div class="label">Submitted</div><div class="who">T. Adeyemi<br>Jul 22, 09:14</div></div>
+            <div class="step-line done"></div>
+            <div class="step done"><div class="dot">✓</div><div class="label">Vetted</div><div class="who">C. Okafor<br>Jul 22, 11:02</div></div>
+            <div class="step-line"></div>
+            <div class="step current"><div class="dot">…</div><div class="label">Approval</div><div class="who">Awaiting<br>B. Uche</div></div>
+            <div class="step-line"></div>
+            <div class="step"><div class="dot">4</div><div class="label">Provisioned</div><div class="who">—</div></div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BACKUPS ================= -->
+  <section class="screen" id="screen-backups">
+    <div class="screen-header">
+      <div>
+        <h1>Backup engine</h1>
+        <p class="meta">Next scheduled run: Saturday, 00:15 · all backup-enabled core devices</p>
+      </div>
+      <div class="header-actions">
+        <span class="status-text" id="backupStatus"></span>
+        <button class="btn btn-primary" id="runBackupBtn">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8V4z"/></svg>
+          Run backup now
+        </button>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="label">Last run</div><div class="value">48 / 50</div><div class="sub">Saturday 00:15 – 00:41</div></div>
+      <div class="metric"><div class="label">Success rate</div><div class="value">96%</div><div class="sub">4-week average: 98%</div></div>
+      <div class="metric"><div class="label">Avg. retries before failure</div><div class="value">4.5</div><div class="sub">Cap is 5 retries per device</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Run history</div></div>
+      <div class="table-scroll">
+      <table class="table" id="backupHistoryTable">
+        <thead><tr><th>Run</th><th>Devices</th><th>Success</th><th>Failed</th><th>Status</th></tr></thead>
+        <tbody id="backupHistoryBody">
+          <tr><td>Sat Jul 18, 00:15</td><td>50</td><td>48</td><td>2</td><td><span class="badge badge-warning">Completed with failures</span></td></tr>
+          <tr><td>Sat Jul 11, 00:15</td><td>49</td><td>49</td><td>0</td><td><span class="badge badge-success">Completed</span></td></tr>
+          <tr><td>Sat Jul 04, 00:15</td><td>49</td><td>49</td><td>0</td><td><span class="badge badge-success">Completed</span></td></tr>
+          <tr><td>Sat Jun 27, 00:15</td><td>48</td><td>46</td><td>2</td><td><span class="badge badge-warning">Completed with failures</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Latest run — failed devices</div></div>
+      <div class="table-scroll">
+      <table class="table">
+        <thead><tr><th>Device</th><th>POP</th><th>Retries</th><th>FTP upload</th><th>Error</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">NX-ABJ-CORE-02</td><td>Wuse POP</td><td>5 / 5</td><td><span class="badge badge-danger">Not uploaded</span></td><td>SSH auth timeout after save-config</td></tr>
+          <tr><td class="mono">ASR-KAN-EDGE-01</td><td>Kano Central POP</td><td>5 / 5</td><td><span class="badge badge-danger">Not uploaded</span></td><td>Device unreachable</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= INVENTORY ================= -->
+  <section class="screen" id="screen-inventory">
+    <div class="screen-header">
+      <div>
+        <h1>Device inventory</h1>
+        <p class="meta">150 devices across 3 regions</p>
+      </div>
+      <input type="text" class="search-input" id="invSearch" placeholder="Search hostname">
+    </div>
+
+    <div class="filter-row">
+      <div class="filter-group" id="invRegionFilter">
+        <button class="filter-pill active" data-value="All">All regions</button>
+        <button class="filter-pill" data-value="Lagos">Lagos</button>
+        <button class="filter-pill" data-value="Abuja">Abuja</button>
+        <button class="filter-pill" data-value="Kano">Kano</button>
+      </div>
+      <div class="filter-group" id="invRoleFilter">
+        <button class="filter-pill active" data-value="All">All roles</button>
+        <button class="filter-pill" data-value="core_router">Core router</button>
+        <button class="filter-pill" data-value="core_switch">Core switch</button>
+        <button class="filter-pill" data-value="agg_switch">Agg switch</button>
+        <button class="filter-pill" data-value="access_switch">Access switch</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-scroll">
+      <table class="table">
+        <thead><tr><th>Hostname</th><th>Role</th><th>Platform</th><th>Mgmt IP</th><th>POP</th><th>Status</th></tr></thead>
+        <tbody id="inventoryBody">
+          <tr data-region="Lagos" data-role="core_router"><td class="mono">CORE-ASR-LAG-01</td><td>Core router</td><td>Cisco ASR9000</td><td class="mono">10.10.1.1</td><td>Ikeja POP</td><td><span class="status-dot active"></span>Active</td></tr>
+          <tr data-region="Abuja" data-role="core_router"><td class="mono">CORE-ASR-ABJ-01</td><td>Core router</td><td>Cisco ASR9000</td><td class="mono">10.20.1.1</td><td>Wuse POP</td><td><span class="status-dot active"></span>Active</td></tr>
+          <tr data-region="Abuja" data-role="core_switch"><td class="mono">NX-ABJ-CORE-02</td><td>Core switch</td><td>Nexus 93180</td><td class="mono">10.20.1.34</td><td>Wuse POP</td><td><span class="status-dot maint"></span>Maintenance</td></tr>
+          <tr data-region="Lagos" data-role="access_switch"><td class="mono">SW-IKD-ACC-01</td><td>Access switch</td><td>Catalyst 9300</td><td class="mono">10.10.4.11</td><td>Ikorodu POP</td><td><span class="status-dot active"></span>Active</td></tr>
+          <tr data-region="Lagos" data-role="access_switch"><td class="mono">SW-IKD-ACC-02</td><td>Access switch</td><td>Catalyst 9300</td><td class="mono">10.10.4.12</td><td>Ikorodu POP</td><td><span class="status-dot active"></span>Active</td></tr>
+          <tr data-region="Kano" data-role="core_router"><td class="mono">ASR-KAN-EDGE-01</td><td>Core router</td><td>Cisco ASR920</td><td class="mono">10.30.1.1</td><td>Kano Central POP</td><td><span class="status-dot active"></span>Active</td></tr>
+          <tr data-region="Lagos" data-role="access_switch"><td class="mono">SW-LKI-ACC-01</td><td>Access switch</td><td>Catalyst 9200</td><td class="mono">10.10.7.5</td><td>Lekki POP</td><td><span class="status-dot active"></span>Active</td></tr>
+          <tr data-region="Abuja" data-role="agg_switch"><td class="mono">SW-GRK-ACC-01</td><td>Agg switch</td><td>Catalyst 9500</td><td class="mono">10.20.6.2</td><td>Garki POP</td><td><span class="status-dot active"></span>Active</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // ---------- Mobile drawer ----------
+  const sidebarEl = document.getElementById('sidebar');
+  const overlayEl = document.getElementById('sidebarOverlay');
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+  function openSidebar(){
+    sidebarEl.classList.add('open'); overlayEl.classList.add('open');
+    hamburgerBtn.setAttribute('aria-expanded','true');
+  }
+  function closeSidebar(){
+    sidebarEl.classList.remove('open'); overlayEl.classList.remove('open');
+    hamburgerBtn.setAttribute('aria-expanded','false');
+  }
+  hamburgerBtn.addEventListener('click', ()=>{
+    sidebarEl.classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+  overlayEl.addEventListener('click', closeSidebar);
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeSidebar(); });
+
+  // ---------- Tab navigation ----------
+  const navButtons = document.querySelectorAll('.nav-btn');
+  const screens = document.querySelectorAll('.screen');
+  navButtons.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      navButtons.forEach(b=>b.classList.remove('active'));
+      screens.forEach(s=>s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.target).classList.add('active');
+      closeSidebar();
+      window.scrollTo({top:0, behavior:'instant'});
+    });
+  });
+
+  // ---------- Dashboard region pills (decorative toggle) ----------
+  document.querySelectorAll('#screen-dashboard .filter-pill').forEach(p=>{
+    p.addEventListener('click', ()=>{
+      document.querySelectorAll('#screen-dashboard .filter-pill').forEach(x=>x.classList.remove('active'));
+      p.classList.add('active');
+    });
+  });
+
+  // ---------- Audit engine ----------
+  const runAuditBtn = document.getElementById('runAuditBtn');
+  const auditStatus = document.getElementById('auditStatus');
+  const auditMeta = document.getElementById('auditMeta');
+  runAuditBtn.addEventListener('click', ()=>{
+    runAuditBtn.disabled = true;
+    auditStatus.textContent = 'Scanning core-asr01 · show route longer-prefixes…';
+    setTimeout(()=>{
+      runAuditBtn.disabled = false;
+      auditStatus.textContent = '';
+      auditMeta.textContent = 'Last run: just now · core-asr01, core-asr02';
+    }, 1700);
+  });
+
+  document.querySelectorAll('.diff-action').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const row = btn.closest('tr');
+      row.querySelectorAll('.diff-action').forEach(b=>b.disabled = true);
+      const cell = row.querySelector('.diff-status');
+      if(btn.dataset.action === 'accept'){
+        cell.innerHTML = '<span class="badge badge-success">Accepted → pushed</span>';
+      } else {
+        cell.innerHTML = '<span class="badge badge-neutral">Rejected</span>';
+      }
+    });
+  });
+
+  // ---------- Backup engine ----------
+  const runBackupBtn = document.getElementById('runBackupBtn');
+  const backupStatus = document.getElementById('backupStatus');
+  const backupHistoryBody = document.getElementById('backupHistoryBody');
+  runBackupBtn.addEventListener('click', ()=>{
+    runBackupBtn.disabled = true;
+    backupStatus.textContent = 'Running backup across 50 devices…';
+    const row = document.createElement('tr');
+    row.innerHTML = '<td>Manual run · just now</td><td>50</td><td>—</td><td>—</td><td><span class="badge badge-info">Running</span></td>';
+    backupHistoryBody.prepend(row);
+    setTimeout(()=>{
+      runBackupBtn.disabled = false;
+      backupStatus.textContent = '';
+      row.innerHTML = '<td>Manual run · just now</td><td>50</td><td>49</td><td>1</td><td><span class="badge badge-warning">Completed with failures</span></td>';
+    }, 1700);
+  });
+
+  // ---------- Inventory filters ----------
+  const invSearch = document.getElementById('invSearch');
+  let activeRegion = 'All', activeRole = 'All';
+  function applyInvFilter(){
+    const term = invSearch.value.trim().toLowerCase();
+    document.querySelectorAll('#inventoryBody tr').forEach(tr=>{
+      const regionMatch = activeRegion === 'All' || tr.dataset.region === activeRegion;
+      const roleMatch = activeRole === 'All' || tr.dataset.role === activeRole;
+      const textMatch = !term || tr.textContent.toLowerCase().includes(term);
+      tr.style.display = (regionMatch && roleMatch && textMatch) ? '' : 'none';
+    });
+  }
+  document.querySelectorAll('#invRegionFilter .filter-pill').forEach(p=>{
+    p.addEventListener('click', ()=>{
+      document.querySelectorAll('#invRegionFilter .filter-pill').forEach(x=>x.classList.remove('active'));
+      p.classList.add('active');
+      activeRegion = p.dataset.value;
+      applyInvFilter();
+    });
+  });
+  document.querySelectorAll('#invRoleFilter .filter-pill').forEach(p=>{
+    p.addEventListener('click', ()=>{
+      document.querySelectorAll('#invRoleFilter .filter-pill').forEach(x=>x.classList.remove('active'));
+      p.classList.add('active');
+      activeRole = p.dataset.value;
+      applyInvFilter();
+    });
+  });
+  invSearch.addEventListener('input', applyInvFilter);
+
+  // ---------- Provisioning form ----------
+  const DATA = {
+    partners: [
+      {id:'netfinity', name:'Netfinity', type:'internal'},
+      {id:'mainone', name:'MainOne', type:'external'},
+      {id:'glo', name:'Glo', type:'external'},
+      {id:'phase3', name:'Phase3', type:'external'}
+    ],
+    regions: ['Lagos','Abuja','Kano'],
+    pops: {
+      Lagos: ['Ikorodu POP','Ikeja POP','Lekki POP'],
+      Abuja: ['Wuse POP','Garki POP'],
+      Kano: ['Kano Central POP']
+    },
+    switchesByPop: {
+      'Ikorodu POP': [{name:'SW-IKD-ACC-01', free:6},{name:'SW-IKD-ACC-02', free:22}],
+      'Ikeja POP': [{name:'SW-IKJ-ACC-01', free:3},{name:'SW-IKJ-ACC-02', free:11}],
+      'Lekki POP': [{name:'SW-LKI-ACC-01', free:14}],
+      'Wuse POP': [{name:'SW-WUS-ACC-01', free:9},{name:'SW-WUS-ACC-02', free:2}],
+      'Garki POP': [{name:'SW-GRK-ACC-01', free:17}],
+      'Kano Central POP': [{name:'SW-KAN-ACC-01', free:5}]
+    },
+    nniRegions: {
+      mainone: ['Lagos','Abuja'],
+      glo: ['Lagos','Abuja','Kano'],
+      phase3: ['Abuja']
+    },
+    nniSwitches: {
+      'mainone-Lagos': [{name:'SW-LAG-CORE-01', port:'Ethernet1/12'}],
+      'mainone-Abuja': [{name:'SW-ABJ-CORE-01', port:'Ethernet1/8'}],
+      'glo-Lagos': [{name:'SW-LAG-CORE-02', port:'Ethernet1/4'}],
+      'glo-Abuja': [{name:'SW-ABJ-CORE-02', port:'Ethernet1/34'}],
+      'glo-Kano': [{name:'SW-KAN-CORE-01', port:'Ethernet1/2'}],
+      'phase3-Abuja': [{name:'SW-ABJ-CORE-01', port:'Ethernet1/19'}]
+    },
+    vlanTrend: {
+      'mainone-Lagos': [301,302,305],
+      'mainone-Abuja': [410,411],
+      'glo-Lagos': [120,121,124],
+      'glo-Abuja': [214,215],
+      'glo-Kano': [610],
+      'phase3-Abuja': [780,781]
+    }
+  };
+
+  const partnerSelect = document.getElementById('partnerSelect');
+  const regionSelect = document.getElementById('regionSelect');
+  const internalGroup = document.getElementById('internalFields');
+  const externalGroup = document.getElementById('externalFields');
+  const popSelect = document.getElementById('popSelect');
+  const switchIntSelect = document.getElementById('switchSelectInt');
+  const portIntSelect = document.getElementById('portSelectInt');
+  const switchExtSelect = document.getElementById('switchSelectExt');
+  const portExtSelect = document.getElementById('portSelectExt');
+  const vlanBox = document.getElementById('vlanSuggestions');
+  const vlanInput = document.getElementById('vlanInput');
+
+  partnerSelect.innerHTML = '<option value="">Select carrier partner</option>' +
+    DATA.partners.map(p=>'<option value="'+p.id+'">'+p.name+'</option>').join('');
+
+  function fillSelect(sel, options, placeholder){
+    sel.innerHTML = '<option value="">'+placeholder+'</option>' +
+      options.map(o=>{
+        const val = (o && o.value !== undefined) ? o.value : o;
+        const label = (o && o.label !== undefined) ? o.label : o;
+        return '<option value="'+val+'">'+label+'</option>';
+      }).join('');
+    sel.disabled = options.length === 0;
+  }
+
+  function resetDownstream(){
+    [popSelect, switchIntSelect, portIntSelect, switchExtSelect, portExtSelect].forEach(s=>{
+      s.innerHTML = '<option value="">—</option>'; s.disabled = true;
+    });
+    vlanBox.innerHTML = ''; vlanInput.value = '';
+  }
+
+  partnerSelect.addEventListener('change', ()=>{
+    const p = DATA.partners.find(x=>x.id === partnerSelect.value);
+    resetDownstream();
+    internalGroup.hidden = true; externalGroup.hidden = true;
+    if(!p){
+      regionSelect.disabled = true;
+      regionSelect.innerHTML = '<option value="">Select a carrier partner first</option>';
+      return;
+    }
+    if(p.type === 'internal'){
+      fillSelect(regionSelect, DATA.regions, 'Select region');
+      internalGroup.hidden = false;
+    } else {
+      const regions = DATA.nniRegions[p.id] || [];
+      fillSelect(regionSelect, regions, regions.length ? 'Select region' : 'No NNI x-connect on file');
+      externalGroup.hidden = false;
+    }
+  });
+
+  regionSelect.addEventListener('change', ()=>{
+    const p = DATA.partners.find(x=>x.id === partnerSelect.value);
+    const region = regionSelect.value;
+    if(!p) return;
+    if(p.type === 'internal'){
+      switchIntSelect.innerHTML = '<option value="">—</option>'; switchIntSelect.disabled = true;
+      portIntSelect.innerHTML = '<option value="">—</option>'; portIntSelect.disabled = true;
+      if(!region){ popSelect.disabled = true; popSelect.innerHTML = '<option value="">Select region first</option>'; return; }
+      fillSelect(popSelect, DATA.pops[region] || [], 'Select POP');
+    } else {
+      portExtSelect.innerHTML = '<option value="">—</option>'; portExtSelect.disabled = true;
+      vlanBox.innerHTML = ''; vlanInput.value = '';
+      if(!region){ switchExtSelect.disabled = true; switchExtSelect.innerHTML = '<option value="">Select region first</option>'; return; }
+      const key = partnerSelect.value + '-' + region;
+      const list = DATA.nniSwitches[key] || [];
+      fillSelect(switchExtSelect, list.map(s=>({value:s.name, label:s.name})), list.length ? 'Select switch' : 'No switch on file');
+    }
+  });
+
+  popSelect.addEventListener('change', ()=>{
+    portIntSelect.innerHTML = '<option value="">—</option>'; portIntSelect.disabled = true;
+    const pop = popSelect.value;
+    if(!pop){ switchIntSelect.disabled = true; switchIntSelect.innerHTML = '<option value="">Select POP first</option>'; return; }
+    const list = DATA.switchesByPop[pop] || [];
+    const maxFree = Math.max.apply(null, list.map(s=>s.free));
+    fillSelect(switchIntSelect, list.map(s=>({
+      value:s.name,
+      label:s.name + ' — ' + s.free + ' free' + (s.free === maxFree ? ' · suggested' : '')
+    })), 'Select switch');
+  });
+
+  switchIntSelect.addEventListener('change', ()=>{
+    const sw = switchIntSelect.value;
+    if(!sw){ portIntSelect.disabled = true; portIntSelect.innerHTML = '<option value="">Select switch first</option>'; return; }
+    fillSelect(portIntSelect, ['Gi0/4','Gi0/9','Gi0/17'], 'Select port');
+  });
+
+  switchExtSelect.addEventListener('change', ()=>{
+    const region = regionSelect.value, partner = partnerSelect.value;
+    const key = partner + '-' + region;
+    const list = DATA.nniSwitches[key] || [];
+    const match = list.find(s=>s.name === switchExtSelect.value);
+    vlanBox.innerHTML = ''; vlanInput.value = '';
+    if(!match){ portExtSelect.disabled = true; portExtSelect.innerHTML = '<option value="">Select switch first</option>'; return; }
+    fillSelect(portExtSelect, [match.port], 'Select port');
+    portExtSelect.value = match.port;
+    (DATA.vlanTrend[key] || []).forEach(v=>{
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'pill'; btn.textContent = 'VLAN ' + v;
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('#vlanSuggestions .pill').forEach(el=>el.classList.remove('selected'));
+        btn.classList.add('selected');
+        vlanInput.value = v;
+      });
+      vlanBox.appendChild(btn);
+    });
+  });
+
+  document.getElementById('submitProv').addEventListener('click', ()=>{
+    const site = document.getElementById('siteId').value || 'NG-SITE-0000';
+    const p = DATA.partners.find(x=>x.id === partnerSelect.value);
+    const region = regionSelect.value || '—';
+    const tbody = document.getElementById('submissionsBody');
+    const row = document.createElement('tr');
+    row.innerHTML = '<td class="mono">' + site + '</td><td>' + (p ? p.name : '—') +
+      '</td><td>' + region + '</td><td><span class="badge badge-warning">Pending vetting</span></td>';
+    tbody.prepend(row);
+    const banner = document.getElementById('provBanner');
+    banner.hidden = false;
+    setTimeout(()=>{ banner.hidden = true; }, 3500);
+  });
+</script>
+
+</body>
+</html>
